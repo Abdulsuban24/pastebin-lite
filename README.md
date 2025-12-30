@@ -5,7 +5,7 @@ A lightweight, secure, and serverless-compatible Pastebin clone built with Next.
 This implementation fulfills all functional and non-functional requirements of the take-home assignment, including deterministic testing support, XSS-safe rendering, and robust constraint enforcement.
 
 ---
-
+## :rocket: Live URL: https://pastebin-lite-psi.vercel.app/
 ## ✅ Features
 
 - Create text pastes via UI or API
