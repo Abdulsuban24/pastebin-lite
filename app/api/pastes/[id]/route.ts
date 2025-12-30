@@ -6,9 +6,10 @@ import { getCurrentTimeMs } from '@/utils/time';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = params.id;
+  const { id } = await params;
+
   if (!id) {
     return NextResponse.json({ error: 'Missing paste ID' }, { status: 400 });
   }
@@ -22,7 +23,7 @@ export async function GET(
 
   const now = getCurrentTimeMs(req);
 
-  // Check TTL manually (Redis auto-delete is not enough for view count logic)
+  // Check TTL
   if (paste.ttl_seconds !== undefined) {
     const expiresAt = paste.created_at + paste.ttl_seconds * 1000;
     if (now >= expiresAt) {
@@ -37,11 +38,8 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  // Increment view count
+  // Increment view
   paste.views += 1;
-  const remainingViews = paste.max_views ? paste.max_views - paste.views : null;
-
-  // Update Redis
   await redis.set(key, paste, {
     ex: paste.ttl_seconds,
   });
@@ -49,6 +47,8 @@ export async function GET(
   const expiresAt = paste.ttl_seconds
     ? new Date(paste.created_at + paste.ttl_seconds * 1000).toISOString()
     : null;
+
+  const remainingViews = paste.max_views ? paste.max_views - paste.views : null;
 
   return NextResponse.json({
     content: paste.content,
